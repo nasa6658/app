@@ -86,25 +86,28 @@ jobs:
           "build-tools;31.0.0" \
           "ndk;25.1.8937393"
 
-    - name: 設置 Gradle
-      uses: gradle/actions/setup-gradle@v3
+    - name: 設置 Buildozer 依賴
+      run: |
+        pip install buildozer
+        # 安裝其他依賴（如 Cython 和 Android SDK 依賴）
+        pip install cython==0.29.33
+        # 確保 NDK 和其他工具可用
 
     - name: 構建 APK
       run: |
         echo "當前工作目錄："
         pwd
         ls -la
-        if [ ! -f ./gradlew ]; then
-          echo "錯誤：gradlew 文件未找到！請確保項目根目錄包含 gradlew。"
+        if [ ! -f buildozer.spec ]; then
+          echo "錯誤：buildozer.spec 文件未找到！請確保項目根目錄包含 buildozer.spec。"
           exit 1
         fi
-        ./gradlew assembleRelease
+        buildozer android debug
       env:
-        JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
         ANDROID_SDK_ROOT: /home/runner/.buildozer/android/platform/android-sdk
 
     - name: 上傳 Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: app-release
-        path: app/build/outputs/apk/release/*.apk
+        name: app-debug
+        path: bin/*.apk
