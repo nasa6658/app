@@ -89,9 +89,7 @@ jobs:
     - name: 設置 Buildozer 依賴
       run: |
         pip install buildozer
-        # 安裝其他依賴（如 Cython 和 Android SDK 依賴）
         pip install cython==0.29.33
-        # 確保 NDK 和其他工具可用
 
     - name: 構建 APK
       run: |
@@ -100,6 +98,13 @@ jobs:
         ls -la
         if [ ! -f buildozer.spec ]; then
           echo "錯誤：buildozer.spec 文件未找到！請確保項目根目錄包含 buildozer.spec。"
+          exit 1
+        fi
+        export ANDROIDSDK=$ANDROID_SDK_ROOT
+        export ANDROID_HOME=$ANDROID_SDK_ROOT
+        export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin
+        if [ ! -f "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then
+          echo "錯誤：sdkmanager 未在 $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/ 找到！"
           exit 1
         fi
         buildozer android debug
