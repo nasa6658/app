@@ -46,19 +46,36 @@ jobs:
           echo "解壓後的目錄內容："
           ls -la
 
+          # 調試：列出 cmdline-tools 內部的結構（如果存在）
+          if [ -d cmdline-tools ]; then
+            echo "cmdline-tools 目錄內容："
+            ls -la cmdline-tools
+          fi
+
           # 處理可能的目錄結構
           if [ -d cmdline-tools ]; then
-            mv cmdline-tools latest
+            # 檢查 cmdline-tools 內是否有一個嵌套目錄
+            SUBDIR=$(ls -d cmdline-tools/*/ 2>/dev/null | head -n 1)
+            if [ -n "$SUBDIR" ] && [ -d "$SUBDIR/bin" ]; then
+              echo "找到嵌套目錄 $SUBDIR，將其移動到 latest"
+              mv "$SUBDIR" latest
+              rm -rf cmdline-tools
+            else
+              echo "移動 cmdline-tools 到 latest"
+              mv cmdline-tools latest
+            fi
           elif [ -d commandlinetools ]; then
+            echo "移動 commandlinetools 到 latest"
             mv commandlinetools latest
-          elif [ -d cmdline-tools/cmdline-tools ]; then
-            mv cmdline-tools/cmdline-tools latest
-            rm -rf cmdline-tools
           else
             echo "錯誤：未找到預期的 cmdline-tools 或 commandlinetools 目錄！"
             exit 1
           fi
         fi
+
+        # 調試：列出 latest 目錄的結構
+        echo "latest 目錄內容："
+        ls -la $ANDROID_SDK_ROOT/cmdline-tools/latest
 
         # 驗證 sdkmanager 是否存在
         if [ ! -f $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager ]; then
