@@ -29,11 +29,14 @@ jobs:
 
     - name: 設置 Android SDK
       env:
-        ANDROID_SDK_ROOT: $HOME/.buildozer/android/platform/android-sdk
+        ANDROID_SDK_ROOT: /home/runner/.buildozer/android/platform/android-sdk
       run: |
+        # 調試：顯示環境變量
+        echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+
         # 創建 Android SDK 目錄
-        mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
-        cd $ANDROID_SDK_ROOT/cmdline-tools || { echo "無法進入 $ANDROID_SDK_ROOT/cmdline-tools 目錄！"; exit 1; }
+        mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools" || { echo "無法創建 $ANDROID_SDK_ROOT/cmdline-tools 目錄！"; exit 1; }
+        cd "$ANDROID_SDK_ROOT/cmdline-tools" || { echo "無法進入 $ANDROID_SDK_ROOT/cmdline-tools 目錄！"; exit 1; }
 
         # 調試：顯示當前工作目錄
         echo "當前工作目錄："
@@ -54,11 +57,15 @@ jobs:
           if [ -d cmdline-tools ]; then
             echo "cmdline-tools 目錄內容："
             ls -la cmdline-tools
+            # 檢查 bin 目錄內容
+            if [ -d cmdline-tools/bin ]; then
+              echo "cmdline-tools/bin 目錄內容："
+              ls -la cmdline-tools/bin
+            fi
           fi
 
           # 處理目錄結構
           if [ -d cmdline-tools ]; then
-            # 直接移動 cmdline-tools 內容到 latest
             echo "移動 cmdline-tools 內容到 latest"
             mkdir -p latest
             mv cmdline-tools/* latest/ || { echo "移動 cmdline-tools 內容失敗！"; exit 1; }
@@ -76,22 +83,31 @@ jobs:
           # 調試：檢查移動後的 latest 目錄
           echo "latest 目錄內容："
           ls -la latest || { echo "latest 目錄未正確創建！"; exit 1; }
+
+          # 調試：檢查 latest/bin 目錄內容
+          if [ -d latest/bin ]; then
+            echo "latest/bin 目錄內容："
+            ls -la latest/bin
+          else
+            echo "錯誤：latest/bin 目錄不存在！"
+            exit 1
+          fi
         fi
 
         # 驗證 sdkmanager 是否存在
-        if [ ! -f $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager ]; then
+        if [ ! -f "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then
           echo "錯誤：sdkmanager 未在 $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/ 找到！"
           exit 1
         fi
 
         # 確保 sdkmanager 可執行
-        chmod +x $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager
+        chmod +x "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
 
         # 接受許可證
-        yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
+        yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" --licenses
 
         # 安裝所需的 SDK 組件
-        $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT \
+        "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" \
           "platform-tools" \
           "platforms;android-31" \
           "build-tools;31.0.0" \
