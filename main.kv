@@ -1,0 +1,66 @@
+<ExpenseApp>:
+    do_default_tab: False
+    tab_pos: 'top_mid'
+
+    TabbedPanelItem:
+        text: '分類'
+        BoxLayout:
+            orientation: 'vertical'
+            padding: 10
+            spacing: 10
+
+            BoxLayout:
+                size_hint_y: None
+                height: '40dp'
+                spacing: 10
+                TextInput:
+                    id: category_input
+                    hint_text: '新增分類'
+                Button:
+                    text: '新增'
+                    on_release: root.add_category(category_input.text)
+
+            ScrollView:
+                GridLayout:
+                    id: category_list
+                    cols: 1
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: 5
+
+    TabbedPanelItem:
+        text: '記帳'
+        BoxLayout:
+            orientation: 'vertical'
+            padding: 10
+            spacing: 10
+
+            Spinner:
+                id: category_spinner
+                text: '選擇分類'
+
+            TextInput:
+                id: amount_input
+                hint_text: '金額'
+                input_filter: 'float'
+
+            TextInput:
+                id: item_input
+                hint_text: '品項'
+
+            TextInput:
+                id: note_input
+                hint_text: '備註（可選）'
+
+            Button:
+                text: '新增記帳'
+                on_release:
+                    root.add_expense(category_spinner.text, amount_input.text, item_input.text, note_input.text)
+
+    TabbedPanelItem:
+        text: '數據'
+        BoxLayout:
+            id: data_panel
+            orientation: 'vertical'
+            padding: 10
+            spacing: 10
