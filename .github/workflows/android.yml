@@ -23,8 +23,8 @@ jobs:
       uses: actions/cache@v3
       with:
         path: |
-          $HOME/.buildozer
-          $HOME/.android
+          ~/.buildozer
+          ~/.android
         key: ${{ runner.os }}-buildozer-${{ hashFiles('**/buildozer.spec') }}
 
     - name: Install system dependencies
@@ -63,7 +63,7 @@ jobs:
           curl -o commandlinetools.zip https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
           unzip -q commandlinetools.zip
           rm commandlinetools.zip
-          mv cmdline-tools/cmdline-tools latest
+          mv cmdline-tools latest
         fi
 
         yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
