@@ -33,7 +33,11 @@ jobs:
       run: |
         # 創建 Android SDK 目錄
         mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
-        cd $ANDROID_SDK_ROOT/cmdline-tools
+        cd $ANDROID_SDK_ROOT/cmdline-tools || { echo "無法進入 $ANDROID_SDK_ROOT/cmdline-tools 目錄！"; exit 1; }
+
+        # 調試：顯示當前工作目錄
+        echo "當前工作目錄："
+        pwd
 
         # 檢查是否已存在 latest 目錄
         if [ ! -d latest ]; then
@@ -52,30 +56,27 @@ jobs:
             ls -la cmdline-tools
           fi
 
-          # 處理可能的目錄結構
+          # 處理目錄結構
           if [ -d cmdline-tools ]; then
-            # 檢查 cmdline-tools 內是否有一個嵌套目錄
-            SUBDIR=$(ls -d cmdline-tools/*/ 2>/dev/null | head -n 1)
-            if [ -n "$SUBDIR" ] && [ -d "$SUBDIR/bin" ]; then
-              echo "找到嵌套目錄 $SUBDIR，將其移動到 latest"
-              mv "$SUBDIR" latest
-              rm -rf cmdline-tools
-            else
-              echo "移動 cmdline-tools 到 latest"
-              mv cmdline-tools latest
-            fi
+            # 直接移動 cmdline-tools 內容到 latest
+            echo "移動 cmdline-tools 內容到 latest"
+            mkdir -p latest
+            mv cmdline-tools/* latest/ || { echo "移動 cmdline-tools 內容失敗！"; exit 1; }
+            rm -rf cmdline-tools
           elif [ -d commandlinetools ]; then
-            echo "移動 commandlinetools 到 latest"
-            mv commandlinetools latest
+            echo "移動 commandlinetools 內容到 latest"
+            mkdir -p latest
+            mv commandlinetools/* latest/ || { echo "移動 commandlinetools 內容失敗！"; exit 1; }
+            rm -rf commandlinetools
           else
             echo "錯誤：未找到預期的 cmdline-tools 或 commandlinetools 目錄！"
             exit 1
           fi
-        fi
 
-        # 調試：列出 latest 目錄的結構
-        echo "latest 目錄內容："
-        ls -la $ANDROID_SDK_ROOT/cmdline-tools/latest
+          # 調試：檢查移動後的 latest 目錄
+          echo "latest 目錄內容："
+          ls -la latest || { echo "latest 目錄未正確創建！"; exit 1; }
+        fi
 
         # 驗證 sdkmanager 是否存在
         if [ ! -f $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager ]; then
