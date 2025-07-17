@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
+  workflow_dispatch:  # 可手動觸發
 
 jobs:
   build:
@@ -63,7 +63,9 @@ jobs:
           curl -o commandlinetools.zip https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
           unzip -q commandlinetools.zip
           rm commandlinetools.zip
-          mv cmdline-tools latest
+          mv cmdline-tools cmdline-tools-temp
+          mv cmdline-tools-temp/cmdline-tools latest
+          rm -rf cmdline-tools-temp
         fi
 
         yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
