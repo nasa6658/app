@@ -1,70 +1,68 @@
 [app]
 
-# Title of your application
+# App name & identifier
 title = My Application
-
-# Package name
 package.name = myapp
-
-# Package domain
 package.domain = org.test
 
-# Source code directory
+# 應用程式原始碼路徑與檔案類型
 source.dir = .
-
-# File extensions to include
 source.include_exts = py,png,jpg,kv,atlas
 
-# Version
+# App 版本
 version = 0.1
 
-# Application requirements
+# Python 與 Kivy 相關依賴
 requirements = python3,kivy,sqlite3,setuptools
 
-
-# Supported screen orientation
+# 螢幕方向與顯示
 orientation = portrait
-
-# Fullscreen mode (0 = windowed, 1 = fullscreen)
 fullscreen = 0
 
-# Android permissions
+# 權限設定
 android.permissions = INTERNET
 
-# Android architectures to build for
-android.archs = arm64-v8a, armeabi-v7a
+# 支援的 Android 架構
+android.archs = armeabi-v7a, arm64-v8a
 
-# Enable Android backup
-android.allow_backup = True
-
-# Copy library instead of packaging as libpymodules.so
-android.copy_libs = 1
-
-# Output format for debug builds
+# APK 建置輸出型態
 android.debug_artifact = apk
-
-# Output format for release builds
 android.release_artifact = apk
 
-# Enable SDL2 bootstrap
+# 啟用 SDL2 bootstrap
 p4a.bootstrap = sdl2
 
+# Android 額外設定
+android.allow_backup = 1
+android.copy_libs = 1
+
+# 🔐 Release 簽章設定（CI 自動化打包 Release 用）
+android.release = 1
+android.keystore = my-release-key.keystore
+android.keyalias = my-key-alias
+android.keyalias_pass = your-keyalias-password
+android.keystore_pass = your-keystore-password
+
+# 記得把上面4個值對應替換成你 keystore 實際資訊
+# 你也可以透過 GitHub Secrets 傳進來，自動由 Workflow 填寫
+
+
 [ios]
-# Optional: configure if you plan to support iOS
+# iOS 支援相關（可略過）
 ios.kivy_ios_url = https://github.com/kivy/kivy-ios
 ios.kivy_ios_branch = master
 ios.ios_deploy_url = https://github.com/phonegap/ios-deploy
 ios.ios_deploy_branch = 1.10.0
 ios.codesign.allowed = false
 
-[buildozer]
 
-# Logging level (0 = error, 1 = info, 2 = debug)
+[buildozer]
+# 日誌等級（0=錯誤, 1=資訊, 2=除錯）
 log_level = 2
 
-# Warn if running as root
+# 是否在 root 執行時警告
 warn_on_root = 1
 
-# Optional: customize build directories
+# 自訂建置資料夾（選用）
 # build_dir = ./.buildozer
 # bin_dir = ./bin
