@@ -103,11 +103,14 @@ jobs:
         export ANDROIDSDK=$ANDROID_SDK_ROOT
         export ANDROID_HOME=$ANDROID_SDK_ROOT
         export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin
+        echo "ANDROIDSDK=$ANDROIDSDK"
+        echo "ANDROID_HOME=$ANDROID_HOME"
+        echo "PATH=$PATH"
         if [ ! -f "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then
           echo "錯誤：sdkmanager 未在 $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/ 找到！"
           exit 1
         fi
-        buildozer android debug
+        buildozer android debug --sdkmanager "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
       env:
         ANDROID_SDK_ROOT: /home/runner/.buildozer/android/platform/android-sdk
 
