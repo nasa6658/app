@@ -31,40 +31,25 @@ jobs:
       env:
         ANDROID_SDK_ROOT: /home/runner/.buildozer/android/platform/android-sdk
       run: |
-        # 調試：顯示環境變量
         echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
-
-        # 創建 Android SDK 目錄
         mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools" || { echo "無法創建 $ANDROID_SDK_ROOT/cmdline-tools 目錄！"; exit 1; }
         cd "$ANDROID_SDK_ROOT/cmdline-tools" || { echo "無法進入 $ANDROID_SDK_ROOT/cmdline-tools 目錄！"; exit 1; }
-
-        # 調試：顯示當前工作目錄
         echo "當前工作目錄："
         pwd
-
-        # 檢查是否已存在 latest 目錄
         if [ ! -d latest ]; then
-          # 下載最新命令行工具
           curl -o commandlinetools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
           unzip -q commandlinetools.zip
           rm commandlinetools.zip
-
-          # 調試：列出解壓後的目錄結構
           echo "解壓後的目錄內容："
           ls -la
-
-          # 調試：列出 cmdline-tools 內部的結構（如果存在）
           if [ -d cmdline-tools ]; then
             echo "cmdline-tools 目錄內容："
             ls -la cmdline-tools
-            # 檢查 bin 目錄內容
             if [ -d cmdline-tools/bin ]; then
               echo "cmdline-tools/bin 目錄內容："
               ls -la cmdline-tools/bin
             fi
           fi
-
-          # 處理目錄結構
           if [ -d cmdline-tools ]; then
             echo "移動 cmdline-tools 內容到 latest"
             mkdir -p latest
@@ -79,12 +64,8 @@ jobs:
             echo "錯誤：未找到預期的 cmdline-tools 或 commandlinetools 目錄！"
             exit 1
           fi
-
-          # 調試：檢查移動後的 latest 目錄
           echo "latest 目錄內容："
           ls -la latest || { echo "latest 目錄未正確創建！"; exit 1; }
-
-          # 調試：檢查 latest/bin 目錄內容
           if [ -d latest/bin ]; then
             echo "latest/bin 目錄內容："
             ls -la latest/bin
@@ -93,20 +74,12 @@ jobs:
             exit 1
           fi
         fi
-
-        # 驗證 sdkmanager 是否存在
         if [ ! -f "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then
           echo "錯誤：sdkmanager 未在 $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/ 找到！"
           exit 1
         fi
-
-        # 確保 sdkmanager 可執行
         chmod +x "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
-
-        # 接受許可證
         yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" --licenses
-
-        # 安裝所需的 SDK 組件
         "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" \
           "platform-tools" \
           "platforms;android-31" \
@@ -118,9 +91,16 @@ jobs:
 
     - name: 構建 APK
       run: |
-        # 假設項目位於根目錄，使用 Gradle 構建
+        echo "當前工作目錄："
+        pwd
+        ls -la
+        if [ ! -f ./gradlew ]; then
+          echo "錯誤：gradlew 文件未找到！請確保項目根目錄包含 gradlew。"
+          exit 1
+        fi
         ./gradlew assembleRelease
       env:
+        JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.15-6/x64
         ANDROID_SDK_ROOT: /home/runner/.buildozer/android/platform/android-sdk
 
     - name: 上傳 Artifact
