@@ -3,20 +3,20 @@ name: Build Android APK
 on:
   push:
     tags:
-      - 'v*'  # 自動觸發版本號，例如 v1.0.0
+      - 'v*.*.*'
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
@@ -29,23 +29,28 @@ jobs:
             buildozer init
           fi
 
-      - name: 修復 Buildozer 相容的 sdkmanager 路徑
+      - name: Set up Android SDK environment
+        run: |
+          echo "ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
+          echo "ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
+          echo "PATH=$PATH:$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_ENV
+
+      - name: Fix sdkmanager path for Buildozer compatibility
         run: |
           mkdir -p $ANDROID_SDK_ROOT/tools
-          ln -sf $ANDROID_SDK_ROOT/cmdline-tools/latest $ANDROID_SDK_ROOT/tools/
+          ln -sf $ANDROID_SDK_ROOT/cmdline-tools/latest $ANDROID_SDK_ROOT/tools
+
+      - name: Install Android build-tools
+        run: |
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" "platforms;android-34"
 
       - name: Build Release APK
-        env:
-          ANDROID_SDK_ROOT: /home/runner/.buildozer/android/platform/android-sdk
-          ANDROID_HOME: /home/runner/.buildozer/android/platform/android-sdk
         run: |
-          export ANDROIDSDK=$ANDROID_SDK_ROOT
-          export ANDROID_HOME=$ANDROID_SDK_ROOT
-          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin
           buildozer android release
 
-      - name: Upload APK artifact
+      - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: release-apk
+          name: app-release.apk
           path: bin/*.apk
