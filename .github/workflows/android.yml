@@ -1,90 +1,80 @@
-name: Build APK
+name: Android CI
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout source code
+    - name: 檢查出代碼
       uses: actions/checkout@v4
 
-    - name: Set up Python 3.11
+    - name: 設置 Java 環境
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: 設置 Python 環境
       uses: actions/setup-python@v5
       with:
-        python-version: 3.11
+        python-version: '3.11'
 
-    - name: Cache Buildozer and Android SDK
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.buildozer
-          ~/.android
-        key: ${{ runner.os }}-buildozer-${{ hashFiles('**/buildozer.spec') }}
-
-    - name: Install system dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y \
-          openjdk-17-jdk \
-          unzip \
-          zip \
-          build-essential \
-          ccache \
-          git \
-          libffi-dev \
-          libssl-dev \
-          libbz2-dev \
-          libsqlite3-dev \
-          zlib1g-dev \
-          libncurses5-dev \
-          libncursesw5-dev \
-          libreadline-dev \
-          libgdbm-dev \
-          liblzma-dev
-
-    - name: Install Python packages
-      run: |
-        python -m pip install --upgrade pip setuptools Cython virtualenv
-        pip install buildozer
-
-    - name: Accept Android SDK licenses and install SDK/NDK
+    - name: 設置 Android SDK
       env:
         ANDROID_SDK_ROOT: $HOME/.buildozer/android/platform/android-sdk
       run: |
+        # 創建 Android SDK 目錄
         mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
         cd $ANDROID_SDK_ROOT/cmdline-tools
+
+        # 檢查是否已存在 latest 目錄
         if [ ! -d latest ]; then
-          curl -o commandlinetools.zip https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
+          # 下載最新命令行工具
+          curl -o commandlinetools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
           unzip -q commandlinetools.zip
           rm commandlinetools.zip
 
+          # 調試：列出解壓後的目錄結構
+          echo "解壓後的目錄內容："
+          ls -la
+
+          # 處理可能的目錄結構
           if [ -d cmdline-tools ]; then
             mv cmdline-tools latest
+          elif [ -d commandlinetools ]; then
+            mv commandlinetools latest
           elif [ -d cmdline-tools/cmdline-tools ]; then
             mv cmdline-tools/cmdline-tools latest
             rm -rf cmdline-tools
           else
-            echo "cmdline-tools directory not found!"
+            echo "錯誤：未找到預期的 cmdline-tools 或 commandlinetools 目錄！"
             exit 1
           fi
         fi
 
+        # 驗證 sdkmanager 是否存在
+        if [ ! -f $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager ]; then
+          echo "錯誤：sdkmanager 未在 $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/ 找到！"
+          exit 1
+        fi
+
+        # 確保 sdkmanager 可執行
+        chmod +x $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager
+
+        # 接受許可證
         yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
-        $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-31" "build-tools;31.0.0" "ndk;25.1.8937393"
 
-    - name: Build APK with Buildozer
-      run: |
-        buildozer android clean
-        buildozer android debug
-
-    - name: Upload APK artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: myapp-debug-apk
-        path: bin/*.apk
+        # 安裝所需的 SDK 組件
+        $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT \
+          "platform-tools" \
+          "platforms;android-31" \
+          "build-tools;31.0.0" \
+          "ndk;25.1.8937393"
