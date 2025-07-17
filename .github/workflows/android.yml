@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:  # 可手動觸發
+  workflow_dispatch:
 
 jobs:
   build:
@@ -63,9 +63,16 @@ jobs:
           curl -o commandlinetools.zip https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
           unzip -q commandlinetools.zip
           rm commandlinetools.zip
-          mv cmdline-tools cmdline-tools-temp
-          mv cmdline-tools-temp/cmdline-tools latest
-          rm -rf cmdline-tools-temp
+
+          if [ -d cmdline-tools ]; then
+            mv cmdline-tools latest
+          elif [ -d cmdline-tools/cmdline-tools ]; then
+            mv cmdline-tools/cmdline-tools latest
+            rm -rf cmdline-tools
+          else
+            echo "cmdline-tools directory not found!"
+            exit 1
+          fi
         fi
 
         yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
